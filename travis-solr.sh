@@ -197,8 +197,8 @@ download_and_run() {
 
 add_core() {
     dir_name=$1; shift
-    dir_conf=$2; shift
-    solr_core=$3; shift
+    dir_conf=$1; shift
+    solr_core=$1; shift
     solr_confs=$*
     # prepare our folders
     [[ -d "${dir_name}/example/multicore/${solr_core}" ]] || mkdir $dir_name/example/multicore/$solr_core
