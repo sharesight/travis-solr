@@ -26,8 +26,15 @@ is_solr_up(){
 }
 
 wait_for_solr(){
+    counter=1
     while ! is_solr_up; do
+        if [ "$counter" -gt 50 ]
+        then
+          echo "Waited $counter times for Solr; won't wait any longer"
+          exit 1
+        fi
         sleep 3
+        counter=$((counter + 1))
     done
 }
 
