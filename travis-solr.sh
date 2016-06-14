@@ -14,6 +14,9 @@ download() {
     else
        echo "File $FILE does not exist. Downloading solr from $1..."
        curl -O $1
+       echo "-----------------------"
+       cat $FILE
+       echo "-----------------------"
        tar -zxf $FILE
     fi
     echo "Downloaded!"
