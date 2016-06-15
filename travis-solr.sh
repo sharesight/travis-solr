@@ -4,6 +4,8 @@ SOLR_PORT=${SOLR_PORT:-8983}
 SOLR_VERSION=${SOLR_VERSION:-4.9.1}
 DEBUG=${DEBUG:-false}
 SOLR_CORE=${SOLR_CORE:-core0}
+# Since Solr 5.x
+SOLR_COLLECTION=${SOLR_COLLECTION:-gettingstarted}
 
 download() {
     FILE="$2.tgz"
@@ -63,6 +65,19 @@ run() {
     echo "Started"
 }
 
+run_solr5_example() {
+    dir_name=$1
+    solr_port=$2
+    ./$dir_name/bin/solr -p $solr_port -c -e schemaless
+    echo "Started"
+}
+
+run_solr5() {
+    dir_name=$1
+    solr_port=$2
+    ./$dir_name/bin/solr -p $solr_port -c
+    echo "Started"
+}
 
 download_and_run() {
     case $1 in
@@ -192,17 +207,66 @@ download_and_run() {
             dir_name="solr-4.10.3"
             dir_conf="collection1/conf/"
             ;;
+        4.10.4)
+            url="http://archive.apache.org/dist/lucene/solr/4.10.4/solr-4.10.4.tgz"
+            dir_name="solr-4.10.4"
+            dir_conf="collection1/conf/"
+            ;;
+        5.0.0)
+            url="http://archive.apache.org/dist/lucene/solr/5.0.0/solr-5.0.0.tgz"
+            dir_name="solr-5.0.0"
+            ;;
+        5.1.0)
+            url="http://archive.apache.org/dist/lucene/solr/5.1.0/solr-5.1.0.tgz"
+            dir_name="solr-5.1.0"
+            ;;
+        5.2.0)
+            url="http://archive.apache.org/dist/lucene/solr/5.2.0/solr-5.2.0.tgz"
+            dir_name="solr-5.2.0"
+            ;;
+        5.2.1)
+            url="http://archive.apache.org/dist/lucene/solr/5.2.1/solr-5.2.1.tgz"
+            dir_name="solr-5.2.1"
+            ;;
+        5.3.0)
+            url="http://archive.apache.org/dist/lucene/solr/5.3.0/solr-5.3.0.tgz"
+            dir_name="solr-5.3.0"
+            ;;
+        5.3.1)
+            url="http://archive.apache.org/dist/lucene/solr/5.3.1/solr-5.3.1.tgz"
+            dir_name="solr-5.3.1"
+            ;;
+        5.4.0)
+            url="http://archive.apache.org/dist/lucene/solr/5.4.0/solr-5.4.0.tgz"
+            dir_name="solr-5.4.0"
+            ;;
     esac
 
     download $url $dir_name
-    add_core $dir_name $dir_conf $SOLR_CORE $SOLR_CONFS
-    run $dir_name $SOLR_PORT $SOLR_CORE
-
-    if [ -z "${SOLR_DOCS}" ]
+    if [[ $1 == 5* ]]
     then
-        echo "$solr_docs not defined, skipping initial indexing"
+        if [ -z "${SOLR_COLLECTION_CONF}" ]
+        then
+            run_solr5_example $dir_name $SOLR_PORT
+        else
+            run_solr5 $dir_name $SOLR_PORT
+            create_collection $dir_name $SOLR_COLLECTION $SOLR_COLLECTION_CONF $SOLR_PORT
+        fi
+        if [ -z "${SOLR_DOCS}" ]
+        then
+            echo "SOLR_DOCS not defined, skipping initial indexing"
+        else
+            post_documents_solr5 $dir_name $SOLR_COLLECTION $SOLR_DOCS $SOLR_PORT
+        fi
     else
-        post_documents $dir_name $SOLR_DOCS $SOLR_CORE $SOLR_PORT
+        add_core $dir_name $dir_conf $SOLR_CORE "$SOLR_CONFS"
+        run $dir_name $SOLR_PORT $SOLR_CORE
+         if [ -z "${SOLR_DOCS}" ]
+        then
+            echo "SOLR_DOCS not defined, skipping initial indexing"
+        else
+            post_documents $dir_name $SOLR_DOCS $SOLR_CORE $SOLR_PORT
+        fi
     fi
 }
 
@@ -215,9 +279,13 @@ add_core() {
     [[ -d "${dir_name}/example/multicore/${solr_core}" ]] || mkdir $dir_name/example/multicore/$solr_core
     [[ -d "${dir_name}/example/multicore/${solr_core}/conf" ]] || mkdir $dir_name/example/multicore/$solr_core/conf
 
+    # copy text configs from default single core conf to new core to have proper defaults
+    cp -R $dir_name/example/solr/conf/{lang,*.txt} $dir_name/example/multicore/$solr_core/conf/
+
     # copies custom configurations
     if [ -d "${solr_confs}" ] ; then
       cp -R $solr_confs/* $dir_name/example/multicore/$solr_core/conf/
+      echo "Copied $solr_confs/* to solr conf directory."
     else
       for file in $solr_confs
       do
@@ -229,6 +297,12 @@ add_core() {
             exit 1
         fi
       done
+    fi
+
+    # enable custom core
+    if [ "$solr_core" != "core0" -a "$solr_core" != "core1" ] ; then
+        echo "Adding $solr_core to solr.xml"
+        sed -i -e "s/<\/cores>/<core name=\"$solr_core\" instanceDir=\"$solr_core\" \/><\/cores>/" $dir_name/example/multicore/solr.xml
     fi
 }
 
@@ -247,9 +321,34 @@ post_documents() {
     fi
 }
 
+create_collection() {
+    dir_name=$1
+    name=$2
+    dir_conf=$3
+    solr_port=$4
+    ./$dir_name/bin/solr create -c $name -d $dir_conf -shards 1 -replicationFactor 1 -p solr_port
+    echo "Created collection $name"
+}
+
+post_documents_solr5() {
+    dir_name=$1
+    collection=$2
+    solr_docs=$3
+    solr_port=$4
+     # Post documents
+    if [ -z "${solr_docs}" ]
+    then
+        echo "SOLR_DOCS not defined, skipping initial indexing"
+    else
+        echo "Indexing $solr_docs"
+        echo "./$dir_name/bin/post -c $collection $solr_docs -p$solr_port"
+        ./$dir_name/bin/post -c $collection $solr_docs -p $solr_port
+    fi
+}
+
 check_version() {
     case $1 in
-        3.5.0|3.6.0|3.6.1|3.6.2|4.0.0|4.1.0|4.2.0|4.2.1|4.3.1|4.4.0|4.5.0|4.5.1|4.6.0|4.6.1|4.7.0|4.7.1|4.7.2|4.8.0|4.8.1|4.9.0|4.9.1|4.10.0|4.10.1|4.10.2|4.10.3);;
+        3.5.0|3.6.0|3.6.1|3.6.2|4.0.0|4.1.0|4.2.0|4.2.1|4.3.1|4.4.0|4.5.0|4.5.1|4.6.0|4.6.1|4.7.0|4.7.1|4.7.2|4.8.0|4.8.1|4.9.0|4.9.1|4.10.0|4.10.1|4.10.2|4.10.3|4.10.4|5.0.0|5.1.0|5.2.0|5.2.1|5.3.0|5.3.1|5.4.0);;
         *)
             echo "Sorry, $1 is not supported or not valid version."
             exit 1
