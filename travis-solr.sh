@@ -14,9 +14,9 @@ download() {
     else
        echo "File $FILE does not exist. Downloading solr from $1..."
        curl -O $1
-       echo "-----------------------"
-       cat $FILE
-       echo "-----------------------"
+       # echo "-----------------------"
+       # cat $FILE
+       # echo "-----------------------"
        tar -zxf $FILE
     fi
     echo "Downloaded!"
@@ -167,7 +167,8 @@ download_and_run() {
             dir_conf="collection1/conf/"
             ;;
         4.9.1)
-            url="http://archive.apache.org/dist/lucene/solr/4.9.1/solr-4.9.1.tgz"
+            # url="http://archive.apache.org/dist/lucene/solr/4.9.1/solr-4.9.1.tgz"
+            url="http://sharesight-build-cache.s3-website-us-east-1.amazonaws.com/solr-4.9.1.tgz"
             dir_name="solr-4.9.1"
             dir_conf="collection1/conf/"
             ;;
