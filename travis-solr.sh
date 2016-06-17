@@ -243,7 +243,7 @@ download_and_run() {
             ;;
     esac
 
-    if [ "$2" != "true"]
+    if [[ ! "$2" = "true"]]
     then
       download $url $dir_name
     fi
