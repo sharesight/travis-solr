@@ -6,6 +6,7 @@ DEBUG=${DEBUG:-false}
 SOLR_CORE=${SOLR_CORE:-core0}
 # Since Solr 5.x
 SOLR_COLLECTION=${SOLR_COLLECTION:-gettingstarted}
+RUN_ONLY=${RUN_ONLY:-false}
 
 download() {
     FILE="$2.tgz"
@@ -243,7 +244,11 @@ download_and_run() {
             ;;
     esac
 
-    download $url $dir_name
+    if [ "$2" != "true"]
+    then
+      download $url $dir_name
+    fi
+
     if [[ $1 == 5* ]]
     then
         if [ -z "${SOLR_COLLECTION_CONF}" ]
@@ -358,4 +363,4 @@ check_version() {
 }
 
 check_version $SOLR_VERSION
-download_and_run $SOLR_VERSION
+download_and_run $SOLR_VERSION $RUN_ONLY
