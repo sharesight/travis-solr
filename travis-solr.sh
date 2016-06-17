@@ -209,8 +209,7 @@ download_and_run() {
             dir_conf="collection1/conf/"
             ;;
         4.10.4)
-            # url="http://archive.apache.org/dist/lucene/solr/4.10.4/solr-4.10.4.tgz"
-            url="http://sharesight-build-cache.s3-website-us-east-1.amazonaws.com/solr-4.10.4.tgz"
+            url="http://archive.apache.org/dist/lucene/solr/4.10.4/solr-4.10.4.tgz"
             dir_name="solr-4.10.4"
             dir_conf="collection1/conf/"
             ;;
