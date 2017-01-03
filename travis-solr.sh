@@ -81,46 +81,34 @@ run_solr5() {
 }
 
 download_and_run() {
-    case $1 in
-        3.5.0)
-            url="http://archive.apache.org/dist/lucene/solr/3.5.0/apache-solr-3.5.0.tgz"
-            dir_name="apache-solr-3.5.0"
-            dir_conf="conf/"
-            ;;
-        3.6.0)
-            url="http://archive.apache.org/dist/lucene/solr/3.6.0/apache-solr-3.6.0.tgz"
-            dir_name="apache-solr-3.6.0"
-            dir_conf="conf/"
-            ;;
-        3.6.1)
-            url="http://archive.apache.org/dist/lucene/solr/3.6.1/apache-solr-3.6.1.tgz"
-            dir_name="apache-solr-3.6.1"
-            dir_conf="conf/"
-            ;;
-        3.6.2)
-            url="http://archive.apache.org/dist/lucene/solr/3.6.2/apache-solr-3.6.2.tgz"
-            dir_name="apache-solr-3.6.2"
-            dir_conf="conf/"
-            ;;
-        4.0.0)
-            url="http://archive.apache.org/dist/lucene/solr/4.0.0/apache-solr-4.0.0.tgz"
-            dir_name="apache-solr-4.0.0"
-            dir_conf="collection1/conf/"
-            ;;
-        4.1.0)
-            url="http://archive.apache.org/dist/lucene/solr/4.1.0/solr-4.1.0.tgz"
-            dir_name="solr-4.1.0"
-            dir_conf="collection1/conf/"
-            ;;
-        4.2.0)
-            url="http://archive.apache.org/dist/lucene/solr/4.2.0/solr-4.2.0.tgz"
-            dir_name="solr-4.2.0"
-            dir_conf="collection1/conf/"
-            ;;
-        *)
-			echo "Sorry, $1 is not supported or not valid version."
-			exit 1
-    esac
+ 	version=$1
+     case $1 in
+         3.*)
+             url="http://archive.apache.org/dist/lucene/solr/${version}/apache-solr-${version}.tgz"
+             dir_name="apache-solr-${version}"
+             dir_conf="conf/"
+             ;;
+         4.0.0)
+             url="http://archive.apache.org/dist/lucene/solr/4.0.0/apache-solr-4.0.0.tgz"
+             dir_name="apache-solr-4.0.0"
+             dir_conf="collection1/conf/"
+             ;;
+         4.*)
+             # url="http://archive.apache.org/dist/lucene/solr/${version}/solr-${version}.tgz"
+             url="http://sharesight-build-cache.s3-website-us-east-1.amazonaws.com/solr-${version}.tgz"
+             dir_name="solr-${version}"
+             dir_conf="collection1/conf/"
+             ;;
+         5.*|6.*)
+             url="http://archive.apache.org/dist/lucene/solr/${version}/solr-${version}.tgz"
+             # url="http://sharesight-build-cache.s3-website-us-east-1.amazonaws.com/solr-${version}.tgz"
+             dir_name="solr-${version}"
+             dir_conf="collection1/conf/"
+             ;;
+         *)
+ 			echo "Sorry, $1 is not supported or not valid version."
+ 			exit 1
+     esac
 
     download $url $dir_name
 #    if [[ $1 == 5* || $1 == 6* ]]
