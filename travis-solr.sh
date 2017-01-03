@@ -169,7 +169,7 @@ add_core() {
     #cp -R $dir_name/example/solr/conf/{lang,*.txt} $dir_name/server/solr/$solr_core/conf/
 
     # Copy the default core
-    cp -R $dir_name/server/solr/default/conf/* $dir_name/server/solr/$solr_core/conf
+    # cp -R $dir_name/server/solr/default/conf/* $dir_name/server/solr/$solr_core/conf
 
     # And make a data dir
     mkdir -p $dir_name/server/solr/$solr_core/data
