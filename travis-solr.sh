@@ -137,8 +137,10 @@ download_and_run() {
 
         du -a $dir_name
 
+        cat $dir_name/server/logs/solr.log
+
         # Test solr core
-        response=$(curl --write-out %{http_code} 'http://localhost:'$SOLR_PORT'/solr/'$SOLR_CORE'/admin/ping' )
+        response=$(curl --write-out %{http_code} 'http://localhost:'$SOLR_PORT'/solr/'$SOLR_CORE'/admin/ping' --output /dev/null)
         if [[ $response -ne '200' ]]; then
           echo "Ping failed, err "$response
           exit
@@ -164,7 +166,13 @@ add_core() {
     [[ -d "${dir_name}/server/solr/${solr_core}/conf" ]] || mkdir $dir_name/server/solr/$solr_core/conf
 
     # copy text configs from default single core conf to new core to have proper defaults
-    cp -R $dir_name/example/solr/conf/{lang,*.txt} $dir_name/server/solr/$solr_core/conf/
+    #cp -R $dir_name/example/solr/conf/{lang,*.txt} $dir_name/server/solr/$solr_core/conf/
+
+    # Copy the default core
+    cp -R $dir_name/server/solr/default/conf/* $dir_name/server/solr/$solr_core/conf
+
+    # And make a data dir
+    mkdir -p $dir_name/server/solr/$solr_core/data
 
     # copies custom configurations
     if [ -d "${solr_confs}" ] ; then
