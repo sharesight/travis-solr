@@ -103,6 +103,7 @@ download_and_run() {
             url="http://archive.apache.org/dist/lucene/solr/${version}/solr-${version}.tgz"
             # url="http://sharesight-build-cache.s3-website-us-east-1.amazonaws.com/solr-${version}.tgz"
             dir_name="solr-${version}"
+            dir_conf="collection1/conf/"
             ;;
         *)
 			echo "Sorry, $1 is not supported or not valid version."
@@ -142,6 +143,7 @@ add_core() {
     dir_conf=$2
     solr_core=$3
     solr_confs=$4
+    echo "Add core: dir_name=$dir_name, dir_conf=$dir_conf, solr_core=$solr_core, solr_confs=$solr_confs"
     # prepare our folders
     [[ -d "${dir_name}/example/multicore/${solr_core}" ]] || mkdir $dir_name/example/multicore/$solr_core
     [[ -d "${dir_name}/example/multicore/${solr_core}/conf" ]] || mkdir $dir_name/example/multicore/$solr_core/conf
