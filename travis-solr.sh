@@ -157,21 +157,22 @@ add_core() {
     solr_confs=$4
     echo "Add core: dir_name=$dir_name, dir_conf=$dir_conf, solr_core=$solr_core, solr_confs=$solr_confs"
     # prepare our folders
-    [[ -d "${dir_name}/example/multicore/${solr_core}" ]] || mkdir $dir_name/example/multicore/$solr_core
-    [[ -d "${dir_name}/example/multicore/${solr_core}/conf" ]] || mkdir $dir_name/example/multicore/$solr_core/conf
+    [[ -d "${dir_name}/server/solr/${solr_core}" ]] || mkdir $dir_name/server/solr/$solr_core
+    [[ -d "${dir_name}/server/solr/${solr_core}/conf" ]] || mkdir $dir_name/server/solr/$solr_core/conf
 
     # copy text configs from default single core conf to new core to have proper defaults
-    cp -R $dir_name/example/solr/conf/{lang,*.txt} $dir_name/example/multicore/$solr_core/conf/
+    cp -R $dir_name/example/solr/conf/{lang,*.txt} $dir_name/server/solr/$solr_core/conf/
 
     # copies custom configurations
     if [ -d "${solr_confs}" ] ; then
-      cp -R $solr_confs/* $dir_name/example/multicore/$solr_core/conf/
+      cp -R $solr_confs/* $dir_name/server/solr/$solr_core/conf/
       echo "Copied $solr_confs/* to solr conf directory."
     else
       for file in $solr_confs
       do
+        echo "Process conf file $file"
         if [ -f "${file}" ]; then
-            cp $file $dir_name/example/multicore/$solr_core/conf
+            cp $file $dir_name/server/solr/$solr_core/conf
             echo "Copied $file into solr conf directory."
         else
             echo "${file} is not valid";
@@ -183,7 +184,7 @@ add_core() {
     # enable custom core
     if [ "$solr_core" != "core0" -a "$solr_core" != "core1" ] ; then
         echo "Adding $solr_core to solr.xml"
-        sed -i -e "s/<\/cores>/<core name=\"$solr_core\" instanceDir=\"$solr_core\" \/><\/cores>/" $dir_name/example/multicore/solr.xml
+        sed -i -e "s/<\/cores>/<core name=\"$solr_core\" instanceDir=\"$solr_core\" \/><\/cores>/" $dir_name/server/solr/solr.xml
     fi
 }
 
