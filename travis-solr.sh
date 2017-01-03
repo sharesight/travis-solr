@@ -135,6 +135,15 @@ download_and_run() {
             run $dir_name $SOLR_PORT $SOLR_CORE
         fi
 
+        du -a $dir_name
+
+        # Test solr core
+        response=$(curl --write-out %{http_code} 'http://localhost:'$SOLR_PORT'/solr/'$SOLR_CORE'/admin/ping' )
+        if [[ $response -ne '200' ]]; then
+          echo "Ping failed, err "$response
+          exit
+        fi
+
         if [ -z "${SOLR_DOCS}" ]
         then
             echo "SOLR_DOCS not defined, skipping initial indexing"
