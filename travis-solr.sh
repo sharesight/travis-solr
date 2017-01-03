@@ -128,8 +128,14 @@ download_and_run() {
 #        fi
 #    else
         add_core $dir_name $dir_conf $SOLR_CORE "$SOLR_CONFS"
-        run $dir_name $SOLR_PORT $SOLR_CORE
-         if [ -z "${SOLR_DOCS}" ]
+        if [[ $1 == 5* || $1 == 6* ]]
+        then
+            run_solr5 $dir_name $SOLR_PORT
+        else
+            run $dir_name $SOLR_PORT $SOLR_CORE
+        fi
+
+        if [ -z "${SOLR_DOCS}" ]
         then
             echo "SOLR_DOCS not defined, skipping initial indexing"
         else
