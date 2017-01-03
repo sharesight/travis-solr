@@ -110,22 +110,22 @@ download_and_run() {
     esac
 
     download $url $dir_name
-    if [[ $1 == 5* || $1 == 6* ]]
-    then
-        if [ -z "${SOLR_COLLECTION_CONF}" ]
-        then
-            run_solr5_example $dir_name $SOLR_PORT
-        else
-            run_solr5 $dir_name $SOLR_PORT
-            create_collection $dir_name $SOLR_COLLECTION $SOLR_COLLECTION_CONF $SOLR_PORT
-        fi
-        if [ -z "${SOLR_DOCS}" ]
-        then
-            echo "SOLR_DOCS not defined, skipping initial indexing"
-        else
-            post_documents_solr5 $dir_name $SOLR_COLLECTION $SOLR_DOCS $SOLR_PORT
-        fi
-    else
+#    if [[ $1 == 5* || $1 == 6* ]]
+#    then
+#        if [ -z "${SOLR_COLLECTION_CONF}" ]
+#        then
+#            run_solr5_example $dir_name $SOLR_PORT
+#        else
+#            run_solr5 $dir_name $SOLR_PORT
+#            create_collection $dir_name $SOLR_COLLECTION $SOLR_COLLECTION_CONF $SOLR_PORT
+#        fi
+#        if [ -z "${SOLR_DOCS}" ]
+#        then
+#            echo "SOLR_DOCS not defined, skipping initial indexing"
+#        else
+#            post_documents_solr5 $dir_name $SOLR_COLLECTION $SOLR_DOCS $SOLR_PORT
+#        fi
+#    else
         add_core $dir_name $dir_conf $SOLR_CORE "$SOLR_CONFS"
         run $dir_name $SOLR_PORT $SOLR_CORE
          if [ -z "${SOLR_DOCS}" ]
@@ -134,7 +134,7 @@ download_and_run() {
         else
             post_documents $dir_name $SOLR_DOCS $SOLR_CORE $SOLR_PORT
         fi
-    fi
+#    fi
 }
 
 add_core() {
