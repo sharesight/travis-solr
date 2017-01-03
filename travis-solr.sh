@@ -76,7 +76,12 @@ run_solr5_example() {
 run_solr5() {
     dir_name=$1
     solr_port=$2
-    ./$dir_name/bin/solr -p $solr_port -c
+    if [ "$3" = true ] ; then
+        echo "Starting without core create"
+        ./$dir_name/bin/solr -p $solr_port
+    else
+        ./$dir_name/bin/solr -p $solr_port -c
+    fi
     echo "Started"
 }
 
@@ -130,7 +135,7 @@ download_and_run() {
         add_core $dir_name $dir_conf $SOLR_CORE "$SOLR_CONFS"
         if [[ $1 == 5* || $1 == 6* ]]
         then
-            run_solr5 $dir_name $SOLR_PORT
+            run_solr5 $dir_name $SOLR_PORT true
         else
             run $dir_name $SOLR_PORT $SOLR_CORE
         fi
