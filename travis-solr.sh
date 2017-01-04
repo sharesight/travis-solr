@@ -86,16 +86,19 @@ run_solr5() {
 }
 
 download_using_cache() {
-    cache_url = ''
-    case $1 in
+    cache_url=''
+    case $SOLR_VERSION in
      3.*|4.0.0)
+         dir_name="apache-solr-${SOLR_VERSION}"
          apache_url="http://archive.apache.org/dist/lucene/solr/4.0.0/apache-solr-4.0.0.tgz"
          ;;
      4.*)
+         dir_name="solr-${SOLR_VERSION}"
          apache_url="http://archive.apache.org/dist/lucene/solr/${SOLR_VERSION}/solr-${SOLR_VERSION}.tgz"
          cache_url="http://sharesight-build-cache.s3-website-us-east-1.amazonaws.com/solr-${SOLR_VERSION}.tgz"
          ;;
      5.*|6.*)
+         dir_name="solr-${SOLR_VERSION}"
          apache_url="http://archive.apache.org/dist/lucene/solr/${SOLR_VERSION}/solr-${SOLR_VERSION}.tgz"
          cache_url="http://sharesight-build-cache.s3-website-us-east-1.amazonaws.com/solr-${SOLR_VERSION}.tgz"
          ;;
@@ -104,7 +107,13 @@ download_using_cache() {
         exit 1
     esac
 
-    if [[ $cache_url -ne '' ]]; then
+    if [ -f "$dir_name.tgz" ]; then
+        echo "Already got $dir_name.tgz"
+        download $apache_url $dir_name
+        return
+    fi
+
+    if [ "$cache_url" != '' ]; then
         http_code=`echo $(curl -I -w "%{http_code}" -o /dev/null $cache_url)`
         if [[ $http_code -eq '200' ]]; then
           echo "Downloading from cache $cache_url"
@@ -118,9 +127,10 @@ download_using_cache() {
 }
 
 download_and_run() {
+
     download_using_cache
 
-    case $1 in
+    case $SOLR_VERSION in
      3.*)
          dir_name="apache-solr-${SOLR_VERSION}"
          dir_conf="conf/"
@@ -171,6 +181,7 @@ download_and_run() {
         response=$(curl --write-out %{http_code} 'http://localhost:'$SOLR_PORT'/solr/'$SOLR_CORE'/admin/ping' --output /dev/null)
         if [[ $response -ne '200' ]]; then
           echo "Ping failed, err "$response
+          exit
         fi
         echo "Ping core $SOLR_CORE on port $SOLR_PORT was happy"
 
@@ -182,7 +193,7 @@ download_and_run() {
         else
             post_documents $dir_name $SOLR_DOCS $SOLR_CORE $SOLR_PORT
         fi
-#    fi
+    fi
 }
 
 add_core() {
@@ -220,6 +231,10 @@ add_core() {
         fi
       done
     fi
+
+    # Edit the data path for the core
+    abs_data_path=`pwd`'/'$dir_name'/solr/'$solr_core'/data'
+    sed -i -e "s_<dataDir>.*</dataDir>_<dataDir>$abs_data_path</dataDir>_g" $dir_name/server/solr/$solr_core/conf/solrconfig.xml
 
     # enable custom core
     if [ "$solr_core" != "core0" -a "$solr_core" != "core1" ] ; then
