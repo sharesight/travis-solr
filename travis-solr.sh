@@ -132,6 +132,7 @@ download_and_run() {
 #            post_documents_solr5 $dir_name $SOLR_COLLECTION $SOLR_DOCS $SOLR_PORT
 #        fi
 #    else
+        echo 'Solr config, wd='; pwd
         add_core $dir_name $dir_conf $SOLR_CORE "$SOLR_CONFS"
         du -a $dir_name
 
