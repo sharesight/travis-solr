@@ -148,6 +148,7 @@ download_and_run() {
         if [[ $response -ne '200' ]]; then
           echo "Ping failed, err "$response
         fi
+        echo "Ping core $SOLR_CORE on port $SOLR_PORT was happy"
 
         cat $dir_name/server/logs/solr.log
 
@@ -181,8 +182,8 @@ add_core() {
 
     # copies custom configurations
     if [ -d "${solr_confs}" ] ; then
-      cp -R $solr_confs/* $dir_name/server/solr/$solr_core/conf/
-      echo "Copied $solr_confs/* to solr conf directory."
+      cp -R -v $solr_confs/* $dir_name/server/solr/$solr_core/conf/
+      echo "Copied $solr_confs/* to solr conf directory: $dir_name/server/solr/$solr_core/conf/"
     else
       for file in $solr_confs
       do
