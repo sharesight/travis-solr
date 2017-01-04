@@ -179,6 +179,8 @@ add_core() {
     # Copy the default core
     # cp -R $dir_name/server/solr/default/conf/* $dir_name/server/solr/$solr_core/conf
 
+    touch $dir_name/server/solr/$solr_core/core.properties
+
     # And make a data dir
     mkdir -p $dir_name/server/solr/$solr_core/data
 
