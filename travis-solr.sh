@@ -85,58 +85,80 @@ run_solr5() {
     echo "Started"
 }
 
-download_and_run() {
- 	version=$1
-     case $1 in
-         3.*)
-             url="http://archive.apache.org/dist/lucene/solr/${version}/apache-solr-${version}.tgz"
-             dir_name="apache-solr-${version}"
-             dir_conf="conf/"
-             ;;
-         4.0.0)
-             url="http://archive.apache.org/dist/lucene/solr/4.0.0/apache-solr-4.0.0.tgz"
-             dir_name="apache-solr-4.0.0"
-             dir_conf="collection1/conf/"
-             ;;
-         4.*)
-             # url="http://archive.apache.org/dist/lucene/solr/${version}/solr-${version}.tgz"
-             url="http://sharesight-build-cache.s3-website-us-east-1.amazonaws.com/solr-${version}.tgz"
-             dir_name="solr-${version}"
-             dir_conf="collection1/conf/"
-             ;;
-         5.*|6.*)
-             url="http://archive.apache.org/dist/lucene/solr/${version}/solr-${version}.tgz"
-             # url="http://sharesight-build-cache.s3-website-us-east-1.amazonaws.com/solr-${version}.tgz"
-             dir_name="solr-${version}"
-             dir_conf="collection1/conf/"
-             ;;
-         *)
- 			echo "Sorry, $1 is not supported or not valid version."
- 			exit 1
-     esac
+download_using_cache() {
+    cache_url = ''
+    case $1 in
+     3.*|4.0.0)
+         apache_url="http://archive.apache.org/dist/lucene/solr/4.0.0/apache-solr-4.0.0.tgz"
+         ;;
+     4.*)
+         apache_url="http://archive.apache.org/dist/lucene/solr/${SOLR_VERSION}/solr-${SOLR_VERSION}.tgz"
+         cache_url="http://sharesight-build-cache.s3-website-us-east-1.amazonaws.com/solr-${SOLR_VERSION}.tgz"
+         ;;
+     5.*|6.*)
+         apache_url="http://archive.apache.org/dist/lucene/solr/${SOLR_VERSION}/solr-${SOLR_VERSION}.tgz"
+         cache_url="http://sharesight-build-cache.s3-website-us-east-1.amazonaws.com/solr-${SOLR_VERSION}.tgz"
+         ;;
+     *)
+        echo "Sorry, $1 is not supported or not valid SOLR_VERSION."
+        exit 1
+    esac
 
-    download $url $dir_name
-#    if [[ $1 == 5* || $1 == 6* ]]
-#    then
-#        if [ -z "${SOLR_COLLECTION_CONF}" ]
-#        then
-#            run_solr5_example $dir_name $SOLR_PORT
-#        else
-#            run_solr5 $dir_name $SOLR_PORT
-#            create_collection $dir_name $SOLR_COLLECTION $SOLR_COLLECTION_CONF $SOLR_PORT
-#        fi
-#        if [ -z "${SOLR_DOCS}" ]
-#        then
-#            echo "SOLR_DOCS not defined, skipping initial indexing"
-#        else
-#            post_documents_solr5 $dir_name $SOLR_COLLECTION $SOLR_DOCS $SOLR_PORT
-#        fi
-#    else
+    if [[ $cache_url -ne '' ]]; then
+        http_code=`echo $(curl -I -w "%{http_code}" -o /dev/null $cache_url)`
+        if [[ $http_code -eq '200' ]]; then
+          echo "Downloading from cache $cache_url"
+          download $cache_url $dir_name
+          return
+        fi
+    fi
+
+    echo "No cache, downloading from apache $apache_url"
+    download $apache_url $dir_name
+}
+
+download_and_run() {
+    download_using_cache
+
+    case $1 in
+     3.*)
+         dir_name="apache-solr-${SOLR_VERSION}"
+         dir_conf="conf/"
+         ;;
+     4.0.0)
+         dir_name="apache-solr-4.0.0"
+         dir_conf="collection1/conf/"
+         ;;
+     4.*|5.*|6.*)
+         dir_name="solr-${SOLR_VERSION}"
+         dir_conf="collection1/conf/"
+         ;;
+     *)
+        echo "Sorry, $SOLR_VERSION is not supported or not valid version."
+        exit 1
+    esac
+
+    if [[ $SOLR5_COLLECTIONS && ($SOLR_VERSION == 5* || $SOLR_VERSION == 6*) ]]
+    then
+        if [ -z "${SOLR_COLLECTION_CONF}" ]
+        then
+            run_solr5_example $dir_name $SOLR_PORT
+        else
+            run_solr5 $dir_name $SOLR_PORT
+            create_collection $dir_name $SOLR_COLLECTION $SOLR_COLLECTION_CONF $SOLR_PORT
+        fi
+        if [ -z "${SOLR_DOCS}" ]
+        then
+            echo "SOLR_DOCS not defined, skipping initial indexing"
+        else
+            post_documents_solr5 $dir_name $SOLR_COLLECTION $SOLR_DOCS $SOLR_PORT
+        fi
+    else
         echo 'Solr config, wd='; pwd
         add_core $dir_name $dir_conf $SOLR_CORE "$SOLR_CONFS"
         du -a $dir_name
 
-        if [[ $1 == 5* || $1 == 6* ]]
+        if [[ $SOLR_VERSION == 5* || $SOLR_VERSION == 6* ]]
         then
             run_solr5 $dir_name $SOLR_PORT true
         else
@@ -169,17 +191,14 @@ add_core() {
     solr_core=$3
     solr_confs=$4
     echo "Add core: dir_name=$dir_name, dir_conf=$dir_conf, solr_core=$solr_core, solr_confs=$solr_confs"
+
     # prepare our folders
     [[ -d "${dir_name}/server/solr/${solr_core}" ]] || mkdir $dir_name/server/solr/$solr_core
     [[ -d "${dir_name}/server/solr/${solr_core}/conf" ]] || mkdir $dir_name/server/solr/$solr_core/conf
 
-    # copy text configs from default single core conf to new core to have proper defaults
-    #cp -R $dir_name/example/solr/conf/{lang,*.txt} $dir_name/server/solr/$solr_core/conf/
-
-    # Copy the default core
-    # cp -R $dir_name/server/solr/default/conf/* $dir_name/server/solr/$solr_core/conf
-
+    if [[ $SOLR_VERSION == 5* || $SOLR_VERSION == 6* ]]; then
     touch $dir_name/server/solr/$solr_core/core.properties
+    fi
 
     # And make a data dir
     mkdir -p $dir_name/server/solr/$solr_core/data
@@ -249,4 +268,4 @@ post_documents_solr5() {
     fi
 }
 
-download_and_run $SOLR_VERSION
+download_and_run
