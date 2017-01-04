@@ -208,22 +208,28 @@ add_core() {
     [[ -d "${dir_name}/server/solr/${solr_core}/conf" ]] || mkdir $dir_name/server/solr/$solr_core/conf
 
     if [[ $SOLR_VERSION == 5* || $SOLR_VERSION == 6* ]]; then
-    touch $dir_name/server/solr/$solr_core/core.properties
+        core_path=$dir_name/server/solr/$solr_core
+        touch $core_path/core.properties
+
+        # And make a data dir
+        mkdir -p $dir_name/server/solr/$solr_core/data
+    else
+        core_path=$dir_name/example/multicore/$solr_core
+        # copy text configs from default single core conf to new core to have proper defaults
+        cp -R $dir_name/example/solr/conf/{lang,*.txt} $core_path/conf/
     fi
 
-    # And make a data dir
-    mkdir -p $dir_name/server/solr/$solr_core/data
 
     # copies custom configurations
     if [ -d "${solr_confs}" ] ; then
-      cp -R -v $solr_confs/* $dir_name/server/solr/$solr_core/conf/
-      echo "Copied $solr_confs/* to solr conf directory: $dir_name/server/solr/$solr_core/conf/"
+      cp -R -v $solr_confs/* $core_path/conf/
+      echo "Copied $solr_confs/* to solr conf directory: $core_path/conf/"
     else
       for file in $solr_confs
       do
         echo "Process conf file $file"
         if [ -f "${file}" ]; then
-            cp $file $dir_name/server/solr/$solr_core/conf
+            cp $file $core_path/conf
             echo "Copied $file into solr conf directory."
         else
             echo "${file} is not valid";
@@ -233,8 +239,10 @@ add_core() {
     fi
 
     # Edit the data path for the core
-    abs_data_path=`pwd`'/'$dir_name'/solr/'$solr_core'/data'
-    sed -i -e "s_<dataDir>.*</dataDir>_<dataDir>$abs_data_path</dataDir>_g" $dir_name/server/solr/$solr_core/conf/solrconfig.xml
+    if [[ $SOLR_VERSION == 5* || $SOLR_VERSION == 6* ]]; then
+        abs_data_path=`pwd`'/'$dir_name'/solr/'$solr_core'/data'
+        sed -i -e "s_<dataDir>.*</dataDir>_<dataDir>$abs_data_path</dataDir>_g" $dir_name/server/solr/$solr_core/conf/solrconfig.xml
+    fi
 
     # enable custom core
     if [ "$solr_core" != "core0" -a "$solr_core" != "core1" ] ; then
