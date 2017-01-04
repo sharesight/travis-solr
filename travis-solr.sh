@@ -141,15 +141,15 @@ download_and_run() {
         fi
 
         du -a $dir_name
-
-        cat $dir_name/server/logs/solr.log
+        sleep 5
 
         # Test solr core
         response=$(curl --write-out %{http_code} 'http://localhost:'$SOLR_PORT'/solr/'$SOLR_CORE'/admin/ping' --output /dev/null)
         if [[ $response -ne '200' ]]; then
           echo "Ping failed, err "$response
-          exit
         fi
+
+        cat $dir_name/server/logs/solr.log
 
         if [ -z "${SOLR_DOCS}" ]
         then
